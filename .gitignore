@@ -1,0 +1,53 @@
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+
+# Poetry / pip-tools
+pip-wheel-metadata/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# FastAPI/UVicorn
+*.log
+
+# Node / Vite
+node_modules/
+.npm/
+.pnpm-store/
+dist/
+*.tsbuildinfo
+
+# IDEs/editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker / compose
+db_data/
+
+# Env files / secrets
+.env
+.env.*
+!.env.example
+
+# Misc
+*.egg-info/
+*.sqlite3
