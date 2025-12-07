@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     app_name: str = "Memory Journal API"
     api_key: str = "change-me"
+    redis_url: str = "redis://redis:6379/0"
 
     postgres_user: str = "ai_journal"
     postgres_password: str = "ai_journal"

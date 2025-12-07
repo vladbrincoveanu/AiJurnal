@@ -1,0 +1,65 @@
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #050816;
+  color: #e2e8f0;
+  min-width: 320px;
+}
+
+main {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  gap: 4px;
+}
+
+input,
+textarea,
+select {
+  border: 1px solid #1f2933;
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: #0f172a;
+  color: inherit;
+}
+
+button {
+  border: none;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(120deg, #10b981, #3b82f6);
+  color: white;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+#status {
+  min-height: 16px;
+  font-size: 0.8rem;
+  color: #38bdf8;
+}

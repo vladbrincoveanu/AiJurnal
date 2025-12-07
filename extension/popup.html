@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>AIJournal Capture</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <h1>AIJournal</h1>
+      <section class="config">
+        <label>
+          <span>API Base</span>
+          <input id="apiBase" type="text" placeholder="https://example.com/api" />
+        </label>
+        <label>
+          <span>API Key</span>
+          <input id="apiKey" type="password" placeholder="APP_API_KEY" />
+        </label>
+        <button id="saveConfig">Save config</button>
+      </section>
+
+      <section class="capture">
+        <label>
+          <span>Title</span>
+          <input id="title" type="text" />
+        </label>
+        <label>
+          <span>URL</span>
+          <input id="url" type="text" />
+        </label>
+        <label>
+          <span>Content</span>
+          <textarea id="content" rows="4"></textarea>
+        </label>
+        <label>
+          <span>Source type</span>
+          <select id="sourceType">
+            <option value="web" selected>web</option>
+            <option value="note">note</option>
+            <option value="file">file</option>
+            <option value="chat">chat</option>
+          </select>
+        </label>
+        <label>
+          <span>Source app</span>
+          <input id="sourceApp" type="text" value="browser-extension" />
+        </label>
+        <button id="saveMemory">Save to AIJournal</button>
+        <p id="status" role="status"></p>
+      </section>
+    </main>
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>

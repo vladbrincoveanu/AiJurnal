@@ -45,7 +45,10 @@ def main() -> None:
     if args.path.is_dir():
         targets = list(iter_files(args.path))
 
-    headers = {"X-API-Key": API_KEY} if API_KEY else {}
+    headers = {}
+    if API_KEY:
+        headers["X-API-Key"] = API_KEY
+        headers["Authorization"] = f"Bearer {API_KEY}"
     with httpx.Client(timeout=15.0) as client:
         for file_path in targets:
             if file_path.is_dir():

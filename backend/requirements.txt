@@ -12,3 +12,8 @@ python-dotenv==1.0.1
 pydantic-settings==2.2.1
 structlog==24.1.0
 orjson==3.10.1
+redis==5.0.4
+rq==1.16.2
+beautifulsoup4==4.12.3
+readability-lxml==0.8.1
+lxml-html-clean==0.1.1

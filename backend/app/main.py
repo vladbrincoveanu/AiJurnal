@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from datetime import datetime
 from typing import Any, Optional
 
 import structlog
 from fastapi import (
-    BackgroundTasks,
     Depends,
     FastAPI,
     Header,
@@ -17,9 +17,11 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
-from app.db import async_session, get_session, init_db
+from app.db import get_session, init_db
 from app.models import Event, EventCreate, EventRead, SourceType
-from app.services.llm import chat_completion, generate_summary, get_embedding
+from app.services.content import fetch_article
+from app.services.llm import chat_completion, get_embedding
+from app.services.tasks import enqueue_event_processing
 
 logger = structlog.get_logger()
 settings = get_settings()
@@ -36,9 +38,22 @@ class ChatRequest(BaseModel):
     limit: int = 5
 
 
-async def verify_api_key(x_api_key: Optional[str] = Header(default=None)) -> None:
+def _extract_bearer(token: Optional[str]) -> Optional[str]:
+    if not token:
+        return None
+    scheme, _, value = token.partition(" ")
+    if scheme.lower() == "bearer" and value:
+        return value
+    return None
+
+
+async def verify_api_key(
+    x_api_key: Optional[str] = Header(default=None),
+    authorization: Optional[str] = Header(default=None),
+) -> None:
     expected = settings.api_key
-    if expected and x_api_key != expected:
+    provided = x_api_key or _extract_bearer(authorization)
+    if expected and provided != expected:
         raise HTTPException(status_code=401, detail="Invalid API key")
 
 
@@ -59,25 +74,6 @@ app.add_middleware(
 )
 
 
-async def process_event(event_id: str) -> None:
-    async with async_session() as session:
-        event = await session.get(Event, event_id)
-        if not event:
-            logger.warning("process_event.missing", event_id=event_id)
-            return
-
-        text = event.content or ""
-
-        if not event.embedding:
-            event.embedding = await get_embedding(text)
-        if not event.summary:
-            event.summary = await generate_summary(text)
-
-        session.add(event)
-        await session.commit()
-        logger.info("process_event.complete", event_id=str(event_id))
-
-
 @app.get("/health")
 async def health_check(session: AsyncSession = Depends(get_session)):
     try:
@@ -91,15 +87,31 @@ async def health_check(session: AsyncSession = Depends(get_session)):
 @app.post("/api/ingest")
 async def ingest_event(
     event_data: EventCreate,
-    background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
     _: Any = Depends(verify_api_key),
 ):
+    if (
+        (not event_data.content or not event_data.content.strip())
+        and event_data.url_or_path
+    ):
+        article = await fetch_article(event_data.url_or_path)
+        if article:
+            event_data.content = article.content
+            if not event_data.title and article.title:
+                event_data.title = article.title
+
+    metadata_values = event_data.metadata_ or {}
+    if metadata_values is None:
+        metadata_values = {}
+    metadata_values = dict(metadata_values)
+    metadata_values.setdefault("captured_at", datetime.utcnow().isoformat())
+    event_data.metadata_ = metadata_values
+
     event = Event(**event_data.dict(by_alias=True))
     session.add(event)
     await session.commit()
     await session.refresh(event)
-    background_tasks.add_task(process_event, str(event.id))
+    enqueue_event_processing(str(event.id))
     return {"status": "received", "id": str(event.id)}
 
 

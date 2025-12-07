@@ -1,8 +1,7 @@
-version: "3.9"
-
 services:
   db:
     image: ankane/pgvector:latest
+    pull_policy: if_not_present
     container_name: ai_journal_db
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-ai_journal}
@@ -23,14 +22,62 @@ services:
     container_name: ai_journal_backend
     env_file:
       - .env
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     volumes:
       - ./backend:/app
     ports:
       - "8000:8000"
+
+  redis:
+    image: redis:7.2-alpine
+    pull_policy: if_not_present
+    container_name: ai_journal_redis
+    ports:
+      - "6379:6379"
+
+  worker:
+    build: ./backend
+    container_name: ai_journal_worker
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+    command: python -m app.worker
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: ai_journal_frontend
+    env_file:
+      - frontend/.env.local
+    environment:
+      VITE_API_BASE: ${VITE_API_BASE:-http://backend:8000/api}
+      VITE_APP_API_KEY: ${VITE_APP_API_KEY:-change-me}
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+    depends_on:
+      backend:
+        condition: service_started
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
 
 volumes:
   db_data:
